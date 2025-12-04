@@ -25,8 +25,18 @@ jobs:
     runs-on: self-hosted
     needs: set-up
     steps:
+      - name: Check if base image exists locally
+        id: check_base_image
+        run: |
+          if docker image inspect carla-base:ue4-${{ env.UBUNTU_DISTRO }} > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
 
-      - uses: docker/build-push-action@v6
+      - name: Build base image
+        if: steps.check_base_image.outputs.exists == 'false'
+        uses: docker/build-push-action@v6
         name: Build image
         with:
           context: Util/Docker
@@ -35,6 +45,10 @@ jobs:
           no-cache: true
           build-args: |
             UBUNTU_DISTRO=${{ env.UBUNTU_DISTRO }}
+
+      - name: Reuse existing monolith image
+        if: steps.check_monolith_image.outputs.exists == 'true'
+        run: echo "Monolith image already exists locally, skipping rebuild."
 
   create-monolith-image:
     name: Create monolith image
