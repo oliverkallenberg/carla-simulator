@@ -1,6 +1,6 @@
 name: Docker
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 env:
   UBUNTU_DISTRO: "22.04"
@@ -61,21 +61,31 @@ jobs:
         if: github.ref_name != github.event.repository.default_branch
         run: echo "IMAGE_TAG_SUFFIX=_$(echo '${{ github.ref_name }}' | tr / -)_ci" >> $GITHUB_ENV
 
-      - uses: docker/login-action@v3
-        name: Login to Docker Hub
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Check if monolith image exists locally
+        id: check_monolith_image
+        run: |
+          if docker image inspect rwthika/carla-simulator:monolith${{ env.IMAGE_TAG_SUFFIX }} > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      # - uses: docker/login-action@v3
+      #   name: Login to Docker Hub
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
 
       - uses: docker/build-push-action@v5
-        name: Build and push image
+        name: Build monolith image
+        if: steps.check_monolith_image.outputs.exists == 'false'
         with:
           context: .
           file: Util/Docker/Development.Dockerfile
           target: monolith
           tags: rwthika/carla-simulator:monolith${{ env.IMAGE_TAG_SUFFIX }}
           no-cache: true
-          push: true
+          push: false
           secrets: |
             "epic_user=${{ secrets.EPIC_USER }}"
             "epic_token=${{ secrets.EPIC_TOKEN }}"
