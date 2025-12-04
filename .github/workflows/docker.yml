@@ -37,7 +37,6 @@ jobs:
       - name: Build base image
         if: steps.check_base_image.outputs.exists == 'false'
         uses: docker/build-push-action@v6
-        name: Build image
         with:
           context: Util/Docker
           file: Util/Docker/Base.Dockerfile
@@ -110,15 +109,15 @@ jobs:
         if: github.ref_name != github.event.repository.default_branch
         run: echo "IMAGE_TAG_SUFFIX=_$(echo '${{ github.ref_name }}' | tr / -)_ci" >> $GITHUB_ENV
 
-      - uses: shrink/actions-docker-extract@v3
-        name: Extract carla-package
+      - name: Extract carla-package
+        uses: shrink/actions-docker-extract@v3
         with:
           image: rwthika/carla-simulator:monolith${{ env.IMAGE_TAG_SUFFIX }}
           path: workspaces/carla/Dist
           destination: artifacts/
 
-      - uses: shrink/actions-docker-extract@v3
-        name: Extract carla-python-api
+      - name: Extract carla-python-api
+        uses: shrink/actions-docker-extract@v3
         with:
           image: rwthika/carla-simulator:monolith${{ env.IMAGE_TAG_SUFFIX }}
           path: workspaces/carla/PythonAPI
