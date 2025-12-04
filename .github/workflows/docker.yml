@@ -86,8 +86,8 @@ jobs:
           no-cache: true
           push: false
           secrets: |
-            "epic_user=${{ secrets.EPIC_USER }}"
-            "epic_token=${{ secrets.EPIC_TOKEN }}"
+            epic_user=${{ secrets.EPIC_USER }}
+            epic_token=${{ secrets.EPIC_TOKEN }}
           build-args: |
             UBUNTU_DISTRO=${{ env.UBUNTU_DISTRO }}
 
